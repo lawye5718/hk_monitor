@@ -44,6 +44,20 @@ def main():
     proc = subprocess.run([sys.executable, "-u", "data_fetcher.py"])
     print(f"[{bj:%Y-%m-%d %H:%M}] 拉取结束，退出码 {proc.returncode}")
 
+    # 拉取完成后，把库里的全量数据导出到 ~/Downloads/hk_monitor/
+    # （无论本次是否抓到新披露都导出，保证每天留一份完整快照）
+    print(f"[{bj:%Y-%m-%d %H:%M}] 开始导出全量数据到 Downloads")
+    try:
+        import export_data
+
+        summary = export_data.export()
+        print(
+            f"[{bj:%Y-%m-%d %H:%M}] 导出完成："
+            + ", ".join(f"{t['table']}={t['rows']}行" for t in summary["tables"])
+        )
+    except Exception as exc:  # 导出失败不应影响定时任务本身的状态判定
+        print(f"[{bj:%Y-%m-%d %H:%M}] 导出失败：{exc}")
+
 
 if __name__ == "__main__":
     main()
